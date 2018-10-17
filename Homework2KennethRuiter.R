@@ -77,22 +77,28 @@ acceptance = 1-mean(duplicated(chain[-(1:burnIn),]))
 
 ### Summary: #######################
 
+createplots <- function(chain, burnIn, param){
+  hists <- function(chain, burnIn, param, paramrow, paramname){
+    hist(chain[-(1:burnIn),paramrow],nclass=30, main=paste(c("Posterior of ", paramname)), xlab="True value = red line" )
+    abline(v = mean(chain[-(1:burnIn),paramrow]))
+    abline(v = param[paramrow], col="red" )
+  }
+  plots <- function(chain, burnIn, param, paramrow, paramname){
+    plot(chain[-(1:burnIn),paramrow], type = "l", xlab="True value = red line" , main = paste(c("Chain values of ", paramname)))
+    abline(h = param[paramrow], col="red" )
+  }
+  
+  hists(chain,burnIn,param,1,"a")
+  hists(chain,burnIn,param,2,"b")
+  hists(chain,burnIn,param,3,"sd")
+  
+  plots(chain,burnIn,param,1,"a")
+  plots(chain,burnIn,param,2,"b")
+  plots(chain,burnIn,param,3,"sd")
+}
+
 par(mfrow = c(2,3))
-hist(chain[-(1:burnIn),1],nclass=30, main="Posterior of a", xlab="True value = red line" )
-abline(v = mean(chain[-(1:burnIn),1]))
-abline(v = trueA, col="red" )
-hist(chain[-(1:burnIn),2],nclass=30, main="Posterior of b", xlab="True value = red line")
-abline(v = mean(chain[-(1:burnIn),2]))
-abline(v = trueB, col="red" )
-hist(chain[-(1:burnIn),3],nclass=30, main="Posterior of sd", xlab="True value = red line")
-abline(v = mean(chain[-(1:burnIn),3]) )
-abline(v = trueSd, col="red" )
-plot(chain[-(1:burnIn),1], type = "l", xlab="True value = red line" , main = "Chain values of a")
-abline(h = trueA, col="red" )
-plot(chain[-(1:burnIn),2], type = "l", xlab="True value = red line" , main = "Chain values of b")
-abline(h = trueB, col="red" )
-plot(chain[-(1:burnIn),3], type = "l", xlab="True value = red line" , main = "Chain values of sd")
-abline(h = trueSd, col="red" )
+createplots(chain, burnIn, c(trueA, trueB, trueSd))
 
 # for comparison:
 summary(lm(y~x))
