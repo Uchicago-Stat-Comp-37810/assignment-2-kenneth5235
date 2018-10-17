@@ -34,3 +34,8 @@ createplots(chain, burnIn, c(trueA, trueB, trueSd))
 
 # for comparison:
 summary(lm(y~x))
+
+# comparing outcomes for different starting values and iterations
+compare_outcomes(1000)
+compare_outcomes(10000)
+compare_outcomes(100000)

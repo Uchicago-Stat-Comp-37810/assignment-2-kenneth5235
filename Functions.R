@@ -68,3 +68,22 @@ createplots <- function(chain, burnIn, param){
   plots(chain,burnIn,param,2,"b")
   plots(chain,burnIn,param,3,"sd")
 }
+
+compare_outcomes <- function(iterations){
+  mean.a <- rep(0,10)
+  sd.a <- rep(0,10)
+  
+  for(i in 1:10){
+    # Randomly create starting values for a, b and sd
+    startvalues <- rnorm(3, mean = c(4,0,10), sd = 1)
+    chain <- run_metropolis_MCMC(startvalues, iterations)
+    
+    # Store the mean of the values in the chain for a
+    mean.a[i] <- mean(chain[,1])
+    # Store the std of the values in the chain for a
+    sd.a[i] <- sd(chain[,1])
+  }
+  
+  print(mean.a)
+  print(sd.a)
+}
