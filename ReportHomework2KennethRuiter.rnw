@@ -1,0 +1,132 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage{a4wide}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage{eurosym}
+\usepackage{inputenc}
+\usepackage{graphicx}
+\usepackage[linesnumbered,ruled]{algorithm2e}
+\usepackage{enumerate}
+\usepackage{caption}
+\usepackage{float}
+
+\title{An analysis on the Metropolis-Hastings algorithm for various iterations}
+\author{Kenneth Ruiter (12206909)}
+
+\begin{document}
+% setting global settings and loading useful libraries
+<<standardsettings,echo=FALSE,results='hide', message = FALSE, warning=FALSE>>=
+library(knitr)
+
+opts_chunk$set(echo=FALSE,fig.width=4, fig.height=4,fig.align='center')
+@
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+In statistics, being able to draw from any distribution you like is a very useful tool for analysing your data. Aside from just the 'usual' distributions, some user-defined ones can be hard to sample from directly, when their density is somewhat odd. A well-known way of solving this problem, is by using the Metropolis-Hastings algorithm. This algorithm is a so-called MCMC (Markov Chain Monte Carlo) method to get random samples from such a difficult distribution. In this report we will focus on a particular example of the Metropolis-Hastinds algorithm. We will use the algorithm to estimate the parameters of a simple Ordinary Least Squares regression model, as to easily compare them with the analyitically computed values of the estimates. We will focus on the accuracy of the algorithm by comparing the outputs for a different number of iterations used to compute our estimate.
+
+\subsection{Overview of the report}
+In Section~\ref{AD}, we will give more elaborate discription of the Metropolis-Hastings algorithm. We will not explain why it works, however we will go through the algorithm step-by-step. Afterwards, we will randomly generate the data and define some parameters in Section~\ref{Set}. Then the results of the algorithm will be shown and discussed in Section~\ref{Res}. Finally, a short conclusion will be given in Section~\ref{Con}.
+
+\newpage
+\section{Algorithm Description}\label{AD}
+
+In this section, the steps involved in the Metropolis-Hastings algorithm will be discussed, using pseudo-code. For this, let $f(x)$ be the density of the distribution that we want to sample from, also known as the target distribution. We will need an initial draw from our sample, so we arbitrarily take $x_0$. We also need an arbitrary second distribution, that we can easily sample from, with density $g(x)$. This distribution will suggest a new candidate for the following draws. We usually take a symmetric distribution, like the Normal distribution, because it makes it easy to compute the acceptance rate of the candidates. This distribution is ususally called the jumping distribution, or sometimes the proposal distribution. The actual steps of the algorithm are shown now.
+
+\begin{algorithm}[H]
+    \SetKwInOut{Input}{Input}
+    \SetKwInOut{Output}{Output}
+
+    \underline{function run\_metropolis\_MCMC} $(f, g,x_0, iterations)$\;
+    \Input{Density function of target distribution $f$, density function of jumping distribution $g$, initial draw $x_0$, number of iterations $iterations$.}
+    
+    \Output{A vector of the ordered accepted draws, representing draws from the target distribution.}
+    \uIf{$intdist$ is exponential}
+      {
+        Set number of random interarrival times $N$ to $T * intarrpar1$\;
+        Randomly generate $N$ interarrival times using an exponential distribution with parameter $intarrpar1$\;
+      }
+    \uElseIf{$intdist$ is gamma}
+      {
+        Set number of random interarrival times $N$ to $T * intarrpar2 / intarrpar1$\;
+        Randomly generate $N$ interarrival times using a gamma distribution with parameters $intarrpar1$ and $intarrpar2$\;
+      }
+    \uIf{$cldist$ is uniform}
+     {
+        Generate $N$ claim sizes using a continuous uniform distribution with parameters $clsizepar1$ and $clsizepar2$\;
+     }
+    \uElseIf{$cldist$ is exponential}
+     {
+        Generate $N$ claim sizes using an exponential distribution with parameter $clsizepar1$\;
+     }
+    \uElseIf{$cldist$ is gamma}
+     {
+        Generate $N$ claim sizes using a gamma distribution with parameters $clsizepar1$ and $clsizepar2$\;
+     }
+    Set arrival times to the cumulative sum of the interarrival times\;
+    Set levels to the cumulative sum of the claim sizes\;
+    Set the premium to $u0 + c * arrivalTimes$\;
+    Set the boolean $ruin$ to $min(premium - levels) < 0$\;
+    Create a list $ret$ of the arrival times, levels and $ruin$\;
+    Return $ret$\;
+    \caption{The Metropolis-Hastings algorithm}
+\end{algorithm}
+
+\section{Setup}\label{Set}
+
+\section{Results}\label{Res}
+
+\section{Conclusion}\label{Con}
+
+<<setup functions and parameters>>=
+source("Functions.R")
+
+trueA <- 5
+trueB <- 0
+trueSd <- 10
+sampleSize <- 31
+
+# create independent x-values 
+x <- (-(sampleSize-1)/2):((sampleSize-1)/2)
+# create dependent values according to ax + b + N(0,sd)
+y <-  trueA * x + trueB + rnorm(n=sampleSize,mean=0,sd=trueSd)
+
+plot(x,y, main="Test Data")
+
+
+# Example: plot the likelihood profile of the slope a
+slopevalues <- function(x){return(likelihood(c(x, trueB, trueSd)))}
+slopelikelihoods <- lapply(seq(3, 7, by=.05), slopevalues )
+plot (seq(3, 7, by=.05), slopelikelihoods , type="l", xlab = "values of slope parameter a", ylab = "Log likelihood")
+
+######## Metropolis algorithm ################
+
+startvalue = c(4,0,10)
+chain = run_metropolis_MCMC(startvalue, 10000)
+
+burnIn = 5000
+acceptance = 1-mean(duplicated(chain[-(1:burnIn),]))
+
+
+### Summary: #######################
+
+par(mfrow = c(2,3))
+createplots(chain, burnIn, c(trueA, trueB, trueSd))
+
+# for comparison:
+summary(lm(y~x))
+
+# comparing outcomes for different starting values and iterations
+#compare_outcomes(1000)
+#compare_outcomes(10000)
+#compare_outcomes(100000)
+@
+
+\end{document}
