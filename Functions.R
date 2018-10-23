@@ -76,6 +76,7 @@ compare_outcomes <- function(iterations){
   for(i in 1:10){
     # Randomly create starting values for a, b and sd
     startvalues <- rnorm(3, mean = c(4,0,10), sd = 1)
+    # Run the Metropolis-Hastings algorithm
     chain <- run_metropolis_MCMC(startvalues, iterations)
     
     # Store the mean of the values in the chain for a
